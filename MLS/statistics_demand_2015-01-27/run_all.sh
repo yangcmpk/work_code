@@ -27,7 +27,7 @@ tmp_date=`date +%s`
 file_name="result_after_done_"${the_date}"_"${tmp_date}
 
 
-bash run_hql.sh > result/result_${the_date}_${tmp_date} 2>log/error.log_${the_date}_${tmp_date}
+bash run_hql.sh ${the_date} > result/result_${the_date}_${tmp_date} 2>log/error.log_${the_date}_${tmp_date}
 
 if [ -e result/result_${the_date}_${tmp_date} ];then
 # 结果转化成 kv 模式，方便后续使用
