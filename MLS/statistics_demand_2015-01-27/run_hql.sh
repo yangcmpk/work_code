@@ -6,7 +6,7 @@
 todaydate=`date +%Y-%m-%d`
 
 if [ $# = 1 ];then
-    todaydate=`date +%Y-%m-%d`
+    todaydate=`date -d $1 +%Y-%m-%d`
 fi
 
 one_day_ago=`date -d "${todaydate} -1day" +%Y-%m-%d`
