@@ -31,9 +31,9 @@ hive -S -e "select 'order_all_comment' as id,count(*) as order_all_comment from 
 # 全部评价中的好评数。level>=4
 hive -S -e "select 'goods_favourable_comment' as id,count(*) as goods_favourable_comment from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4 "
 # 各个类目全部评价量
-hive -S -e "select 'leimu_comment' as id,fisrt_cata,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}')t1 left outer join (select goods_id,fisrt_cata from dm.dm_order_4analyst where order_create_dt > '${one_day_ago}')t2 on t1.goods_id = t2.goods_id group by fisrt_cata limit 20;"
+hive -S -e "select 'leimu_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}')t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
 # 各个类目好评量
-hive -S -e "select 'leimu_haoping_comment' as id,fisrt_cata,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4)t1 left outer join (select goods_id,fisrt_cata from dm.dm_order_4analyst where order_create_dt > '${one_day_ago}')t2 on t1.goods_id = t2.goods_id group by fisrt_cata limit 20;"
+hive -S -e "select 'leimu_haoping_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4)t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
 
 # 全类目DSR
 hive -S -e "
@@ -101,10 +101,10 @@ hive -S -e "select 'all_order_fahuo_xiayu_xiadan_72hour' as id,count(*) from ods
 # 物流时间大于成交时间并且在72小时之内的 * 可能有问题
 hive -S -e "select 'wuliu_dayu_chengjiao_xiaoyu_72' as id,count(*) from (select pay_time,express_time from (select order_id,pay_time from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' )t1 join (select order_id,min(express_time) as express_time from dw.dw_order_express_detail where order_create_dt >='${ten_day_ago}' and order_create_dt <= '${one_day_ago}' group by order_id)t2 on t1.order_id = t2.order_id)tt1 where express_time > from_unixtime(pay_time) and (unix_timestamp(express_time) - pay_time) < ${millisecond_72hour}"
 
-# 四天前的订单 发货减去成交时间的平均值，单位是毫秒 测试的时候，结果是平均331115.218349397757 毫秒，需要确认一下准确性
+# 四天前的订单 发货减去成交时间的平均值，单位是毫秒 测试的时候，结果是平均331115.218349397757 毫秒，需要确认一下准确性 单位要变成天
 hive -S -e "select 'avg_sendtime_paytime' as id, avg( (send_time-pay_time) )/86400 from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' and send_time != 0  limit 10"
 
-# 四天前的订单 物流时间减去成交时间的平均值，单位是毫秒 测试的时候结果是 68656.75362340015 毫秒
+# 四天前的订单 物流时间减去成交时间的平均值，单位是毫秒 测试的时候结果是 68656.75362340015 毫秒 单位要变成天
 hive -S -e "select 'avg_expresstime_paytime' as id ,avg( unix_timestamp(express_time) - pay_time)/86400 from (select pay_time,express_time from (select order_id,pay_time from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' )t1 join (select order_id,min(express_time) as express_time from dw.dw_order_express_detail where order_create_dt >='${ten_day_ago}' and order_create_dt <= '${one_day_ago}' group by order_id)t2 on t1.order_id = t2.order_id)tt1 where express_time > from_unixtime(pay_time) "
 
 # 两天前成交的订单，没有物流信息
