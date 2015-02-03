@@ -25,6 +25,7 @@ all_data_list_send_four_day_ago = ['send_before_refund','all_order_fahuo_xiayu_x
 # mysql的列名
 all_data_list_send_four_day_ago_mysql = ['no_refund_before_delivery_in72hours_after_paid_4day_ago','goods_quantity_send_in_72hour_after_pay_4day_ago','goods_quantity_logistics_in_72hour_after_pay_4day_ago','avg_sendtime_4day_ago','avg_logisticstime_4day_ago']
 all_data_list_send_two_day_ago = ['wu_wuliu','wuliu_zaoyu_chengjiao']
+all_data_list_send_two_day_ago_mysql = ['order_quantity_no_logistics_record_2day_ago','order_quantity_logistics_early_than_paytime_2day_ago']
 
 # 存全部数据都的字典
 all_data_dict = {}
@@ -78,6 +79,18 @@ def exec_stat_sql(table_name,all_values,true_insert_date):
         print "execute ERROR, Exception ", e
         # time.sleep(10)
 
+# 插入的表名字、值、作为主键的时间戳、时间字段
+def exec_stat_sql_only_insert(table_name,all_values,true_insert_date):
+    try:
+        cur = get_config_db('dolphin_stat',1)
+        true_id = int( time.mktime(time.strptime(true_insert_date,'%Y-%m-%d')) )
+        insert_sql = "insert into %s () values(%s,'%s',%s)" % (table_name,true_id,true_insert_date,all_values)
+        print insert_sql
+        cur.execute(insert_sql)
+    except Exception, e:
+        print "execute ERROR, Exception ", e
+        # time.sleep(10)
+
 # 更新表的SQL。all_values 必须是key = value 这样的形式
 def exec_stat_update_sql(table_name,all_values,true_insert_date):
     try:
@@ -120,6 +133,8 @@ def show_all_data():
     # print all_keys
     # print all_values
     exec_stat_sql('t_dolphin_stat_refund',all_values,one_day_ago_datetime)
+
+    # 先插入全是空的数据，然后update 如果原来就有数据，就会插入失败，直接更新就好了
     print "==============发货 table t_dolphin_stat_goods_delivery"
     all_keys=""
     all_values=""
@@ -128,14 +143,23 @@ def show_all_data():
             all_keys += ","
             all_values += ","
         all_keys += i
-        if i in all_data_list_send_four_day_ago:
-            all_values += "0"
-        else:
-            all_values += all_data_dict[i]
+        all_values += "0"
         # print i,all_data_dict[i]
     # print all_keys
     # print all_values
-    exec_stat_sql('t_dolphin_stat_goods_delivery',all_values,two_day_ago_datetime)
+    exec_stat_sql_only_insert('t_dolphin_stat_goods_delivery',all_values,two_day_ago_datetime)
+
+    # 更新2天前数据
+    all_keys=""
+    all_values=""
+    for i in [0,1]:
+        if (all_keys != ""):
+            all_keys += ","
+            all_values += ","
+        all_keys += all_data_list_send_two_day_ago_mysql[i]
+        all_values += all_data_list_send_two_day_ago_mysql[i] + "=" +all_data_dict[all_data_list_send_two_day_ago[i]]
+        # print i,all_data_dict[i]
+    exec_stat_update_sql('t_dolphin_stat_goods_delivery',all_values,two_day_ago_datetime)
     # 更新4天前的数据
     all_keys=""
     all_values=""
