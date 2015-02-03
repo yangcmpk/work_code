@@ -15,6 +15,9 @@ ten_day_ago=`date -d "${todaydate} -10day" +%Y-%m-%d`
 ninety_day_ago=`date -d "${todaydate} -90day" +%Y-%m-%d`
 hundred_day_ago=`date -d "${todaydate} -100day" +%Y-%m-%d`
 four_day_ago=`date -d "${todaydate} -4day" +%Y-%m-%d`
+# 72小时转化成毫秒
+# millisecond_72hour=72*60*60*1000
+millisecond_72hour=259200000
 echo "${one_day_ago}"
 
 # 第一个表数据  评价
@@ -91,12 +94,12 @@ hive -S -e "select 'money_all_order_90day' as id,sum(total_price) from ods_bat_o
 # 第三个表 发货
 
 # 72小时内未产生发货前退款订单数 退款时间大于发货时间 或者 无退款 但是必须是已经发货的
-hive -S -e "select 'send_before_refund' as id,count(*) from (select send_time,apply_time from (select order_id,send_time from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' and from_unixtime(send_time) <= '${one_day_ago} 23:59:59' )t1 left outer join (select order_id,apply_time from ods_bat_order_refund where dt >='${four_day_ago}' and dt <= '${one_day_ago}')t2 on t1.order_id = t2.order_id) tt1 where tt1.send_time < tt1.apply_time and  from_unixtime(apply_time) < '${one_day_ago} 23:59:59'  or apply_time is NULL"
+hive -S -e "select 'send_before_refund' as id,count(*) from (select send_time,apply_time,pay_time from (select order_id,send_time,pay_time from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' and from_unixtime(send_time) <= '${one_day_ago} 23:59:59' )t1 left outer join (select order_id,apply_time from ods_bat_order_refund where dt >='${four_day_ago}' and dt <= '${one_day_ago}')t2 on t1.order_id = t2.order_id) tt1 where tt1.send_time < tt1.apply_time and  (apply_time - pay_time) < ${millisecond_72hour}  or apply_time is NULL"
 # 下单72小时内发货订单数
-hive -S -e "select 'all_order_fahuo_xiayu_xiadan_72hour' as id,count(*) from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' and from_unixtime(send_time) <= '${one_day_ago} 23:59:59'"
+hive -S -e "select 'all_order_fahuo_xiayu_xiadan_72hour' as id,count(*) from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' and (send_time - pay_time) < ${millisecond_72hour}"
 
 # 物流时间大于成交时间并且在72小时之内的 * 可能有问题
-hive -S -e "select 'wuliu_dayu_chengjiao_xiaoyu_72' as id,count(*) from (select pay_time,express_time from (select order_id,pay_time from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' )t1 join (select order_id,min(express_time) as express_time from dw.dw_order_express_detail where order_create_dt >='${ten_day_ago}' and order_create_dt <= '${one_day_ago}' group by order_id)t2 on t1.order_id = t2.order_id)tt1 where express_time > from_unixtime(pay_time) and express_time < '${one_day_ago} 23:59:59'"
+hive -S -e "select 'wuliu_dayu_chengjiao_xiaoyu_72' as id,count(*) from (select pay_time,express_time from (select order_id,pay_time from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' )t1 join (select order_id,min(express_time) as express_time from dw.dw_order_express_detail where order_create_dt >='${ten_day_ago}' and order_create_dt <= '${one_day_ago}' group by order_id)t2 on t1.order_id = t2.order_id)tt1 where express_time > from_unixtime(pay_time) and (unix_timestamp(express_time) - pay_time) < ${millisecond_72hour}"
 
 # 四天前的订单 发货减去成交时间的平均值，单位是毫秒 测试的时候，结果是平均331115.218349397757 毫秒，需要确认一下准确性
 hive -S -e "select 'avg_sendtime_paytime' as id, avg( (send_time-pay_time) ) from ods_bat_order where dt >= '${ten_day_ago}' and dt <= '${one_day_ago}' and order_type=1000 and from_unixtime(pay_time) >= '${four_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${four_day_ago} 23:59:59' and send_time != 0  limit 10"
