@@ -38,20 +38,18 @@ hive -S -e "select 'leimu_haoping_comment' as id,catalog1,count(*) from (select 
 # 全类目DSR
 hive -S -e "
 select 'DSR' as id,CASE mayjor
-    WHEN cast(0 AS BIGINT) then '未设定'
-    WHEN cast(1 AS BIGINT) then '衣服'
-    WHEN cast(2 AS BIGINT) then '鞋子'
-    WHEN cast(3 AS BIGINT) then '包包'
-    WHEN cast(4 AS BIGINT) then '配饰'
-    WHEN cast(5 AS BIGINT) then '美妆'
-    WHEN cast(6 AS BIGINT) then '家居'
-    WHEN cast(7 AS BIGINT) then '综合'
+WHEN cast(0 AS BIGINT) then '未设定'
+WHEN cast(1 AS BIGINT) then '衣服'
+WHEN cast(2 AS BIGINT) then '鞋子'
+WHEN cast(3 AS BIGINT) then '包包'
+WHEN cast(4 AS BIGINT) then '配饰'
+WHEN cast(5 AS BIGINT) then '美妆'
+WHEN cast(6 AS BIGINT) then '家居'
+WHEN cast(7 AS BIGINT) then '综合'
 ELSE '未知' END as major,fast,accord,quality,attitude,(fast+ accord +quality+attitude)/4
-    from
+from
 (
-    select mayjor,avg(fast) as fast ,avg(case when accord>0 then accord end) as accord,avg(quality) as quality,avg(attitude) as attitude from (select shop_id,quality,attitude,fast,accord from ods_bat_shop_order_comment where dt = '${one_day_ago}' and fast != 0 )t1 join (select shop_id,mayjor from ods_focus_shop_info )t2 on t1.shop_id = t2.shop_id group by mayjor
-) t2; "
-
+select mayjor,avg(fast) as fast ,avg(case when accord>0 then accord end) as accord,avg(quality) as quality,avg(attitude) as attitude from (select shop_id,quality,attitude,fast,accord from ods_bat_shop_order_comment where dt = '${one_day_ago}' and fast != 0 )t1 join (select shop_id,mayjor from ods_focus_shop_info )t2 on t1.shop_id = t2.shop_id group by mayjor) t2; "
 
 # 第二个表数据  退款
 reason_list="('商品破损','商家错发或漏发','商品质量问题','未按约定时间发货','未按照约定时间发货','商品 损或无法使用','商品破损无法使用 ','商品与描述不符','描述不符','没货','缺货','没货了','无货','商家没货','卖家没货','断货')"
