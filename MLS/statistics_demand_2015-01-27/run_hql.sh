@@ -36,7 +36,7 @@ hive -S -e "select 'leimu_comment' as id,catalog1,count(*) from (select goods_id
 hive -S -e "select 'leimu_haoping_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4)t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
 
 # 全类目DSR
-hive -e "
+hive -S -e "
 select 'DSR' as id,CASE mayjor
     WHEN cast(0 AS BIGINT) then '未设定'
     WHEN cast(1 AS BIGINT) then '衣服'
