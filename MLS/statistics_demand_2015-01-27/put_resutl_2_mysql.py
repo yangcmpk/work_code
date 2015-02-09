@@ -49,6 +49,12 @@ def init_data_dict ():
         all_data_dict[i] = "0"
     for i in all_data_list_send_two_day_ago:
         all_data_dict[i] = "0"
+    all_data_dict["DSR+鞋子"]="0,0,0,0,0"
+    all_data_dict["DSR+衣服"]="0,0,0,0,0"
+    all_data_dict["DSR+包包"]="0,0,0,0,0"
+    all_data_dict["DSR+配饰"]="0,0,0,0,0"
+    all_data_dict["DSR+美妆"]="0,0,0,0,0"
+    all_data_dict["DSR+家居"]="0,0,0,0,0"
 
 def get_data_from_file():
     # 从文件中获取出全部数据，存入字典中
