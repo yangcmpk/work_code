@@ -24,14 +24,16 @@ date_id=`date -d "${the_date}" +%s`
 
 tmp_date=`date +%s`
 # 入MySQL之前存结果
-file_name="result_after_done_"${the_date}"_"${tmp_date}
+# file_name="result_after_done_"${the_date}"_"${tmp_date}
+file_name="result_after_done_"${the_date}
 
 
-bash run_hql.sh ${the_date} > result/result_${the_date}_${tmp_date} 2>log/error.log_${the_date}_${tmp_date}
+# bash run_hql.sh ${the_date} > result/result_${the_date}_${tmp_date} 2>log/error.log_${the_date}_${tmp_date}
+bash run_hql.sh ${the_date} >> result/result_${the_date} 2>log/error.log_${the_date}_${tmp_date}
 
-if [ -e result/result_${the_date}_${tmp_date} ];then
+if [ -e result/result_${the_date} ];then
 # 结果转化成 kv 模式，方便后续使用
-    cat result/result_${the_date}_${tmp_date} | awk 'BEGIN {FS="\t";OFS="\t"} { if (NF==2) {print $1,$2} if(NF == 3) {print $1"+"$2,$3} if(NF==7) {print $1"+"$2,$3","$4","$5","$6","$7}}' > result/${file_name}
+    cat result/result_${the_date} | awk 'BEGIN {FS="\t";OFS="\t"} { if (NF==2) {print $1,$2} if(NF == 3) {print $1"+"$2,$3} if(NF==7) {print $1"+"$2,$3","$4","$5","$6","$7}}' > result/${file_name}
 fi
 
 if [ -e result/${file_name} ];then
