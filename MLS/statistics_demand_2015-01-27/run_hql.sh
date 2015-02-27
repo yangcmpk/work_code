@@ -23,22 +23,22 @@ echo "${one_day_ago}"
 
 # 第一个表数据  评价
 # 主动评价商品数
-hive -S -e "select 'goods_initiative_comment' as id,count(*) as goods_initiative_comment from ods_bat_goods_comment where dt = '${one_day_ago}' and level != 0 and quality != 0 ;"
+hive -S -e "select 'goods_initiative_comment' as id,count(*) as goods_initiative_comment from ods_bat_goods_comment where dt = '${one_day_ago}' and level != 0 and quality != 0 and status=0 ;"
 # 全部评价商品数
-hive -S -e "select 'goods_all_comment' as id,count(*) as goods_all_comment from ods_bat_goods_comment where dt = '${one_day_ago}'"
+hive -S -e "select 'goods_all_comment' as id,count(*) as goods_all_comment from ods_bat_goods_comment where dt = '${one_day_ago}' and status=0"
 # 全部评价订单数
-hive -S -e "select 'order_all_comment' as id,count(*) as order_all_comment from ods_bat_shop_order_comment where dt = '${one_day_ago}'and fast!=0"
+hive -S -e "select 'order_all_comment' as id,count(*) as order_all_comment from ods_bat_shop_order_comment where dt = '${one_day_ago}'and fast!=0 and status=0"
 
 # 全部评价中的好评数。level>=4
-hive -S -e "select 'goods_favourable_comment' as id,count(*) as goods_favourable_comment from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4 "
+hive -S -e "select 'goods_favourable_comment' as id,count(*) as goods_favourable_comment from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4 and status=0"
 # 各个类目全部评价量
-hive -S -e "select 'leimu_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}')t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
+hive -S -e "select 'leimu_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}' and status=0)t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
 # 各个类目好评量
-hive -S -e "select 'leimu_haoping_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4)t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
+hive -S -e "select 'leimu_haoping_comment' as id,catalog1,count(*) from (select goods_id,level from ods_bat_goods_comment where dt = '${one_day_ago}' and level >= 4 and status=0)t1 left outer join (select distinct goods_id,catalog1,catalog2,catalog3,goods_on_shelf,goods_img from (select distinct goods_id,goods_price,t2.goods_catalog,t2.catalog1,t2.catalog2,t2.catalog3,goods_on_shelf,goods_img from ods_brd_goods_info t1 left outer join dw.dw_goods_catalog_tree t2 on t1.sort_id = t2.goods_catalog ) a )t2 on t1.goods_id = t2.goods_id  group by catalog1 limit 20;"
 
 # 全类目DSR
 hive -S -e "
-select *, (fast+ accord +quality+attitude)/4 from (select 'DSR' as id, '全站' as major, avg(fast) as fast ,avg(case when accord>0 then accord end) as accord,avg(quality) as quality,avg(attitude) as attitude from ods_bat_shop_order_comment where dt = '${one_day_ago}' and fast != 0)t1; "
+select *, (fast+ accord +quality+attitude)/4 from (select 'DSR' as id, '全站' as major, avg(fast) as fast ,avg(case when accord>0 then accord end) as accord,avg(quality) as quality,avg(attitude) as attitude from ods_bat_shop_order_comment where dt = '${one_day_ago}' and fast != 0 and status=0)t1; "
 #分类目DSR
 # ELSE '未知' END as major,fast,if(accord is not NULL,accord,0),quality,attitude,if(accord is not NULL,(fast+ accord +quality+attitude)/4,(fast+ quality+attitude)/3)
 hive -S -e "
@@ -54,7 +54,7 @@ WHEN cast(7 AS BIGINT) then '综合'
 ELSE '未知' END as major,fast,accord,quality,attitude,(fast+ accord +quality+attitude)/4
     from
 (
-select mayjor,avg(fast) as fast ,avg(case when accord>0 then accord end) as accord,avg(quality) as quality,avg(attitude) as attitude from (select shop_id,quality,attitude,fast,accord from ods_bat_shop_order_comment where dt = '${one_day_ago}' and fast != 0 )t1 join (select shop_id,mayjor from ods_focus_shop_info )t2 on t1.shop_id = t2.shop_id group by mayjor) t2; "
+select mayjor,avg(fast) as fast ,avg(case when accord>0 then accord end) as accord,avg(quality) as quality,avg(attitude) as attitude from (select shop_id,quality,attitude,fast,accord from ods_bat_shop_order_comment where dt = '${one_day_ago}' and fast != 0 and status=0)t1 join (select shop_id,mayjor from ods_focus_shop_info )t2 on t1.shop_id = t2.shop_id group by mayjor) t2; "
 
 # 第二个表数据  退款
 reason_list="('商品破损','商家错发或漏发','商品质量问题','未按约定时间发货','未按照约定时间发货','商品 损或无法使用','商品破损无法使用 ','商品与描述不符','描述不符','没货','缺货','没货了','无货','商家没货','卖家没货','断货')"
@@ -76,30 +76,30 @@ hive -S -e "select 'mount_youliyou_zhiliang' as id,sum(amount) from (select rid,
 
 # 无理由退款 商品量
 # 需要加上条件，“或 ods_risk_stat_health_order之中豁免的商品”
-hive -S -e "select 'mount_wuliyou' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where dt = '${one_day_ago}' and reason not in ${reason_list} ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;" 
+hive -S -e "select 'mount_wuliyou' as id, sum(amount) from (select rid, mid， select_reason_id from ods_bat_order_refund where dt = '${one_day_ago}') t1 join (select mid, amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 
 
 # 退款成功的，无论是哪天申请的，只看完成时间在昨天的
 
 #-------------------------------------------------------------------------------------------
 # 有理由退款 成功 商品量
-hive -S -e "select 'mount_youliyou_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 in (1,3,22,24,25,42,43,46,47,48,49) ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid = 1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
+hive -S -e "select 'mount_youliyou_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 in (1,3,22,24,25,42,43,46,47,48,49) ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid = 1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
 
 ##细分退款成功商品量
 # 有理由退款 发货问题 成功 商品量
-hive -S -e "select 'mount_youliyou_fahuo_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 in (1,3,22,24,42,46) ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid = 1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
+hive -S -e "select 'mount_youliyou_fahuo_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 in (1,3,22,24,42,46) ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid = 1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
 
 # 有理由退款 描述问题 成功 商品量
-hive -S -e "select 'mount_youliyou_miaoshu_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 = 47 ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
+hive -S -e "select 'mount_youliyou_miaoshu_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 = 47 ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
 
 # 有礼有退款 质量问题 成功 商品量
-hive -S -e "select 'mount_youliyou_zhiliang_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 in (25,43,48,49) ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
+hive -S -e "select 'mount_youliyou_zhiliang_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id < 200 and select_reason_id%100 in (25,43,48,49) ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;"
 
 
 #-------------------------------------------------------------------------------------------
 
 # 无理由退款 成功 商品量
-hive -S -e "select 'mount_wuliyou_success' as id,sum(amount) from (select rid,mid from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00'  and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and reason not in ${reason_list} ) t1 join (select mid,amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;" 
+hive -S -e "select 'mount_wuliyou_success' as id, sum(amount) from (select rid, mid, select_reason_id from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59') t1 join (select mid, amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 
 
 #-------------------------------------------------------------------------------------------
@@ -118,27 +118,27 @@ hive -S -e "select 'money_youliyou_zhiliang' as id,sum(t1.refund_price_apply) fr
 #-------------------------------------------------------------------------------------------
 
 # 无理由 退款 申请金额
-hive -S -e "select 'money_wuliyou' as id,sum(refund_price_apply) from (select rid,refund_price_apply from ods_bat_order_refund where dt = '${one_day_ago}' and reason not in ${reason_list}) t1 left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;" 
+hive -S -e "select 'money_wuliyou' as id, sum(refund_price_apply) from (select rid, select_reason_id, refund_price_apply from ods_bat_order_refund where dt = '${one_day_ago}') t1 left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 
 #-------------------------------------------------------------------------------------------
 # 有理由 退款 成功 实际金额 如果有仲裁金额，以仲裁金额为准，否则，以申请金额为准
-hive -S -e "select 'money_youliyou_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 in (1,3,22,24,25,42,43,46,47,48,49)) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
+hive -S -e "select 'money_youliyou_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 in (1,3,22,24,25,42,43,46,47,48,49)) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
 
 ## 细分理由
 # 有理由 发货问题 退款 成功 实际金额
-hive -S -e "select 'money_youliyou_fahuo_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 in (1,3,22,24,42,46)) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
+hive -S -e "select 'money_youliyou_fahuo_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 in (1,3,22,24,42,46)) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
 
 # 有理由 描述问题 退款 成功 实际金额
-hive -S -e "select 'money_youliyou_miaoshu_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 = 47) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
+hive -S -e "select 'money_youliyou_miaoshu_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 = 47) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
 
 # 有理由 质量问题 退款 成功 实际金额
-hive -S -e "select 'money_youliyou_zhiliang_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 in (25,43,48,49)) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
+hive -S -e "select 'money_youliyou_zhiliang_success' as id,sum(if(t1.refund_price_deal=0.0,t1.refund_price_apply,t1.refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and select_reason_id<200 and select_reason_id%100 in (25,43,48,49)) t1 left outer join (select refund_id from ods_risk_stat_health_order where type=1 and is_valid=1) t2 on t1.rid=t2.refund_id where t2.refund_id is null limit 3;"
 
 
 #-------------------------------------------------------------------------------------------
 
 # 无理由 退款 成功 实际金额
-hive -S -e "select 'money_wuliyou_success' as id,sum(if(refund_price_deal=0.0,refund_price_apply,refund_price_deal)) from (select rid,refund_price_apply,refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) > '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59' and reason not in ${reason_list}) left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;" 
+hive -S -e "select 'money_wuliyou_success' as id, sum(if(refund_price_deal=0.0,refund_price_apply,refund_price_deal)) from (select rid, select_reason_id, refund_price_apply, refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59') left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 
 #-------------------------------------------------------------------------------------------
 # 90天内 有理由 成功 退款的商品总数
@@ -158,7 +158,7 @@ hive -S -e "select 'mount_youliyou_zhiliang_success_90day' as id,sum(amount) fro
 #-------------------------------------------------------------------------------------------
 
 # 90天内 无理由 成功
-hive -S -e "select 'mount_wuliyou_success_90day' as id,sum(amount) from (select rid,order_id,mid from ods_bat_order_refund where dt >= '${ninety_day_ago}' and dt <= '${one_day_ago}'  and refund_status = 41  and reason not in ${reason_list} ) t1 join (select mid,amount from ods_bat_goods_map where dt >= '${hundred_day_ago}' and dt <= '${one_day_ago}' ) t2 on t1.mid = t2.mid join (select order_id from ods_bat_order where dt >= '${hundred_day_ago}' and  dt <= '${one_day_ago}' and from_unixtime(pay_time) >= '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59') t3 on t1.order_id=t3.order_id left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t4 on t1.rid=t4.refund_id where t4.refund_id is null limit 3;" 
+hive -S -e "select 'mount_wuliyou_success_90day' as id, sum(amount) from (select rid, select_reason_id, order_id, mid from ods_bat_order_refund where dt >= '${ninety_day_ago}' and dt <= '${one_day_ago}' and refund_status = 41) t1 join (select mid, amount from ods_bat_goods_map where dt >= '${hundred_day_ago}' and dt <= '${one_day_ago}') t2 on t1.mid = t2.mid join (select order_id from ods_bat_order where dt >= '${hundred_day_ago}' and dt <= '${one_day_ago}' and from_unixtime(pay_time) >= '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59') t3 on t1.order_id=t3.order_id left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t4 on t1.rid=t4.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t4.refund_id is not null limit 3;" 
 # 90天内成交商品数，ods_bat_order表 paytime > 90 
 hive -S -e "select 'mount_all_order_90day' as id,sum(amount) from (select order_id from ods_bat_order where dt >= '${hundred_day_ago}' and  dt <= '${one_day_ago}' and from_unixtime(pay_time) >= '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59')t1 join (select order_id,amount from ods_bat_goods_map where dt >= '${hundred_day_ago}' and  dt <= '${one_day_ago}')t2 on t1.order_id = t2.order_id "
 
@@ -181,9 +181,9 @@ hive -S -e "select 'money_youliyou_zhiliang_success_90day' as id,sum( if(t1.refu
 
 
 # 90天 无理由 成功 钱数
-hive -S -e "select 'money_wuliyou_success_90day' as id,sum( if(refund_price_deal=0.0,refund_price_apply,refund_price_deal) ) from (select rid,order_id,refund_price_apply,refund_price_deal from ods_bat_order_refund where dt >= '${ninety_day_ago}' and dt <= '${one_day_ago}'  and refund_status = 41 and reason not in ${reason_list}) t1 join (select order_id from ods_bat_order where dt >= '${hundred_day_ago}' and  dt <= '${one_day_ago}' and from_unixtime(pay_time) >= '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59') t2 on t1.order_id=t2.order_id left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where t3.refund_id is null limit 3;" 
+hive -S -e "select 'money_wuliyou_success_90day' as id, sum(if(refund_price_deal=0.0,refund_price_apply,refund_price_deal)) from (select rid, select_reason_id, order_id, refund_price_apply, refund_price_deal from ods_bat_order_refund where dt >= '${ninety_day_ago}' and dt <= '${one_day_ago}' and refund_status = 41) t1 join (select order_id from ods_bat_order where dt >= '${hundred_day_ago}' and dt <= '${one_day_ago}' and from_unixtime(pay_time) >= '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59') t2 on t1.order_id=t2.order_id left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 # 90天内成交的订单，成交金额，ods_bat_order表 paytime > 90 
-hive -S -e "select 'money_all_order_90day' as id,sum(total_price) from ods_bat_order where dt >= '${hundred_day_ago}' and  dt <= '${one_day_ago}' and from_unixtime(pay_time) > '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59'"
+hive -S -e "select 'money_all_order_90day' as id,sum(total_price) from ods_bat_order where dt >= '${hundred_day_ago}' and  dt <= '${one_day_ago}' and from_unixtime(pay_time) >= '${ninety_day_ago} 00:00:00' and from_unixtime(pay_time) <= '${one_day_ago} 23:59:59'"
 
 # 第三个表 发货
 
