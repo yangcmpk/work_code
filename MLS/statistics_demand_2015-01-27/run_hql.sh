@@ -64,7 +64,7 @@ hive -S -e "select 'mount_youliyou_zhiliang' as id,sum(amount) from (select rid,
 
 # 无理由退款 商品量
 # 需要加上条件，“或 ods_risk_stat_health_order之中豁免的商品”
-hive -S -e "select 'mount_wuliyou' as id, sum(amount) from (select rid, mid， select_reason_id from ods_bat_order_refund where dt = '${one_day_ago}') t1 join (select mid, amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
+hive -S -e "select 'mount_wuliyou' as id, sum(amount) from (select rid, mid, select_reason_id from ods_bat_order_refund where dt = '${one_day_ago}') t1 join (select mid, amount from ods_bat_goods_map) t2 on t1.mid = t2.mid left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 
 
 # 退款成功的，无论是哪天申请的，只看完成时间在昨天的
@@ -126,7 +126,7 @@ hive -S -e "select 'money_youliyou_zhiliang_success' as id,sum(if(t1.refund_pric
 #-------------------------------------------------------------------------------------------
 
 # 无理由 退款 成功 实际金额
-hive -S -e "select 'money_wuliyou_success' as id, sum(if(refund_price_deal=0.0,refund_price_apply,refund_price_deal)) from (select rid, select_reason_id, refund_price_apply, refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59') left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
+hive -S -e "select 'money_wuliyou_success' as id, sum(if(refund_price_deal=0.0,refund_price_apply,refund_price_deal)) from (select rid, select_reason_id, refund_price_apply, refund_price_deal from ods_bat_order_refund where refund_status = 41 and from_unixtime(finish_time) >= '${one_day_ago} 00:00:00' and from_unixtime(finish_time) <= '${one_day_ago} 23:59:59') t1 left outer join (select refund_id from ods_risk_stat_health_order where type = 1 and is_valid=1) t3 on t1.rid=t3.refund_id where select_reason_id >=200 or select_reason_id%100 not in (1, 3, 22, 24, 25, 42, 43, 46, 47, 48, 49) or t3.refund_id is not null limit 3;" 
 
 #-------------------------------------------------------------------------------------------
 # 90天内 有理由 成功 退款的商品总数
