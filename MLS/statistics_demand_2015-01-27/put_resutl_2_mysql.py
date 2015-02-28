@@ -21,11 +21,8 @@ all_data_list_comment = ['goods_initiative_comment','goods_all_comment','order_a
 all_data_list_refund = ['mount_youliyou','mount_wuliyou','mount_youliyou_success','mount_wuliyou_success','money_youliyou','money_wuliyou','money_youliyou_success','money_wuliyou_success','mount_youliyou_success_90day','mount_wuliyou_success_90day','mount_all_order_90day','money_youliyou_success_90day','money_wuliyou_success_90day','money_all_order_90day','mount_youliyou_fahuo','mount_youliyou_miaoshu','mount_youliyou_zhiliang','mount_youliyou_fahuo_success','mount_youliyou_miaoshu_success','mount_youliyou_zhiliang_success','money_youliyou_fahuo','money_youliyou_miaoshu','money_youliyou_zhiliang','money_youliyou_fahuo_success','money_youliyou_miaoshu_success','money_youliyou_zhiliang_success','mount_youliyou_fahuo_success_90day','mount_youliyou_miaoshu_success_90day','mount_youliyou_zhiliang_success_90day','money_youliyou_fahuo_success_90day','money_youliyou_miaoshu_success_90day','money_youliyou_zhiliang_success_90day']
 # 发货 的列表 全表的表头，还有需要写入四天前和两天前的列表
 # all_data_list_send = ['send_before_refund','all_order_fahuo_xiayu_xiadan_72hour','wuliu_dayu_chengjiao_xiaoyu_72','avg_sendtime_paytime','avg_expresstime_paytime','wu_wuliu','wuliu_zaoyu_chengjiao']
-all_data_list_send_four_day_ago = ['send_before_refund','all_order_fahuo_xiayu_xiadan_72hour','wuliu_dayu_chengjiao_xiaoyu_72','avg_sendtime_paytime','avg_expresstime_paytime']
+all_data_list_send_four_day_ago = ['send_before_refund','send_time']
 # mysql的列名
-all_data_list_send_four_day_ago_mysql = ['no_refund_before_delivery_in72hours_after_paid_4day_ago','goods_quantity_send_in_72hour_after_pay_4day_ago','goods_quantity_logistics_in_72hour_after_pay_4day_ago','avg_sendtime_4day_ago','avg_logisticstime_4day_ago']
-all_data_list_send_two_day_ago = ['wu_wuliu','wuliu_zaoyu_chengjiao']
-all_data_list_send_two_day_ago_mysql = ['order_quantity_no_logistics_record_2day_ago','order_quantity_logistics_early_than_paytime_2day_ago']
 
 # 存全部数据都的字典
 all_data_dict = {}
@@ -55,6 +52,8 @@ def init_data_dict ():
     all_data_dict["DSR+配饰"]="0,0,0,0,0"
     all_data_dict["DSR+美妆"]="0,0,0,0,0"
     all_data_dict["DSR+家居"]="0,0,0,0,0"
+    all_data_dict["send_before_refund"]="0,0,0"
+    all_data_dict["send_time"]="0,0,0,0"
 
 def get_data_from_file():
     # 从文件中获取出全部数据，存入字典中
@@ -144,39 +143,16 @@ def show_all_data():
     print "==============发货 table t_dolphin_stat_goods_delivery"
     all_keys=""
     all_values=""
-    for i in all_data_list_send_four_day_ago + all_data_list_send_two_day_ago:
+    for i in all_data_list_send_four_day_ago:
         if (all_keys != ""):
             all_keys += ","
             all_values += ","
         all_keys += i
-        all_values += "0"
+        all_values += all_data_dict[i]
         # print i,all_data_dict[i]
     # print all_keys
     # print all_values
-    exec_stat_sql_only_insert('t_dolphin_stat_goods_delivery',all_values,two_day_ago_datetime)
-
-    # 更新2天前数据
-    all_keys=""
-    all_values=""
-    for i in [0,1]:
-        if (all_keys != ""):
-            all_keys += ","
-            all_values += ","
-        all_keys += all_data_list_send_two_day_ago_mysql[i]
-        all_values += all_data_list_send_two_day_ago_mysql[i] + "=" +all_data_dict[all_data_list_send_two_day_ago[i]]
-        # print i,all_data_dict[i]
-    exec_stat_update_sql('t_dolphin_stat_goods_delivery',all_values,two_day_ago_datetime)
-    # 更新4天前的数据
-    all_keys=""
-    all_values=""
-    for i in [0,1,2,3,4]:
-        if (all_keys != ""):
-            all_keys += ","
-            all_values += ","
-        all_keys += all_data_list_send_four_day_ago_mysql[i]
-        all_values += all_data_list_send_four_day_ago_mysql[i] + "=" +all_data_dict[all_data_list_send_four_day_ago[i]]
-        # print i,all_data_dict[i]
-    exec_stat_update_sql('t_dolphin_stat_goods_delivery',all_values,four_day_ago_datetime)
+    exec_stat_sql('t_dolphin_stat_goods_delivery',all_values,four_day_ago_datetime)
 
 
 if __name__ == "__main__":
