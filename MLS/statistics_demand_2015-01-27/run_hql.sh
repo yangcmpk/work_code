@@ -38,7 +38,7 @@ hive -S -e "select 'leimu_haoping_comment' as id,catalog1,count(*) from (select 
 
 # 全类目DSR
 hive -S -e "
-select 't1.*, if(accord > 0, (fast+accord+quality+attitude)/4, (fast+quality+attitude)/3) as avg_dsr from ( select 'DSR' as id, '全站' as major, avg(case when fast>0 then fast end) as fast, avg(case when accord>0 then accord end) as accord, avg(case when quality>0 then quality end) as quality, avg(case when attitude>0 then attitude end) as attitude from ods_bat_shop_order_comment where dt = '${one_day_ago}' and status = 0 and fast != 0 )t1;"
+select t1.*, if(accord > 0, (fast+accord+quality+attitude)/4, (fast+quality+attitude)/3) as avg_dsr from ( select 'DSR' as id, '全站' as major, avg(case when fast>0 then fast end) as fast, avg(case when accord>0 then accord end) as accord, avg(case when quality>0 then quality end) as quality, avg(case when attitude>0 then attitude end) as attitude from ods_bat_shop_order_comment where dt = '${one_day_ago}' and status = 0 and fast != 0 )t1;"
 #分类目DSR
 # ELSE '未知' END as major,fast,if(accord is not NULL,accord,0),quality,attitude,if(accord is not NULL,(fast+ accord +quality+attitude)/4,(fast+ quality+attitude)/3)
 hive -S -e "
