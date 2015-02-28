@@ -14,7 +14,7 @@ from common.statutil import get_stat_db, get_config_db
 '''
 # 评论字段的列表，使用这个的原因是，字典会自动排序，列的顺序不可控，用这个来进行确认。可以方便的控制输出
 # all_data_list_comment = ['goods_initiative_comment','goods_all_comment','order_all_comment','goods_favourable_comment','leimu_comment+NULL','leimu_comment+女包','leimu_comment+女装','leimu_comment+女鞋','leimu_comment+家居','leimu_comment+美妆','leimu_comment+配饰','leimu_haoping_comment+NULL','leimu_haoping_comment+女包','leimu_haoping_comment+女装','leimu_haoping_comment+女鞋','leimu_haoping_comment+家居','leimu_haoping_comment+美妆','leimu_haoping_comment+配饰','DSR+未设定','DSR+衣服','DSR+鞋子','DSR+包包','DSR+配饰','DSR+美妆','DSR+家居']
-all_data_list_comment = ['goods_initiative_comment','goods_all_comment','order_all_comment','goods_favourable_comment','leimu_comment+女包','leimu_comment+女装','leimu_comment+女鞋','leimu_comment+家居','leimu_comment+美妆','leimu_comment+配饰','leimu_haoping_comment+女包','leimu_haoping_comment+女装','leimu_haoping_comment+女鞋','leimu_haoping_comment+家居','leimu_haoping_comment+美妆','leimu_haoping_comment+配饰','DSR+衣服','DSR+鞋子','DSR+包包','DSR+配饰','DSR+美妆','DSR+家居']
+all_data_list_comment = ['goods_initiative_comment','goods_all_comment','order_all_comment','goods_favourable_comment','leimu_comment+女包','leimu_comment+女装','leimu_comment+女鞋','leimu_comment+家居','leimu_comment+美妆','leimu_comment+配饰','leimu_haoping_comment+女包','leimu_haoping_comment+女装','leimu_haoping_comment+女鞋','leimu_haoping_comment+家居','leimu_haoping_comment+美妆','leimu_haoping_comment+配饰','DSR+衣服','DSR+鞋子','DSR+包包','DSR+配饰','DSR+美妆','DSR+家居','DSR+全站']
 # 其中DSR 顺序 发货分、描述分、质量分、服务分、平均分。
 #     avg(fast),avg(accord),avg(quality),avg(attitude),avg((fast+accord+quality+attitude)/4)
 # 退货 的列表
@@ -44,14 +44,13 @@ def init_data_dict ():
         all_data_dict[i] = "0"
     for i in all_data_list_send_four_day_ago:
         all_data_dict[i] = "0"
-    for i in all_data_list_send_two_day_ago:
-        all_data_dict[i] = "0"
     all_data_dict["DSR+鞋子"]="0,0,0,0,0"
     all_data_dict["DSR+衣服"]="0,0,0,0,0"
     all_data_dict["DSR+包包"]="0,0,0,0,0"
     all_data_dict["DSR+配饰"]="0,0,0,0,0"
     all_data_dict["DSR+美妆"]="0,0,0,0,0"
     all_data_dict["DSR+家居"]="0,0,0,0,0"
+    all_data_dict["DSR+全站"]="0,0,0,0,0"
     all_data_dict["send_before_refund"]="0,0,0"
     all_data_dict["send_time"]="0,0,0,0"
 
