@@ -17,7 +17,7 @@ hundred_day_ago=`date -d "${todaydate} -100day" +%Y-%m-%d`
 four_day_ago=`date -d "${todaydate} -4day" +%Y-%m-%d`
 # 72小时转化成毫秒
 # millisecond_72hour=72*60*60*1000
-millisecond_72hour=259200000
+millisecond_72hour=259200
 echo "${one_day_ago}"
 
 
